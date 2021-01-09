@@ -1,6 +1,6 @@
 cc_binary(
-  name = 'fibonacci',
+  name = 'ckms',
   srcs = [
-    'fibonacci.cc',
+    'ckms.cc',
   ],
 )
