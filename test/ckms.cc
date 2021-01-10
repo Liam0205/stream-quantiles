@@ -70,11 +70,11 @@ TEST_CASE("low_biased") {
   YUUKI_TEST_IT(low_biased, long double);
 }
 
-TEST_CASE("uniform") {
-  YUUKI_TEST_IT(uniform, float);
-  YUUKI_TEST_IT(uniform, double);
-  YUUKI_TEST_IT(uniform, long double);
-}
+// TEST_CASE("uniform") {
+//   YUUKI_TEST_IT(uniform, float);
+//   YUUKI_TEST_IT(uniform, double);
+//   YUUKI_TEST_IT(uniform, long double);
+// }
 #undef YUUKI_TEST_IT
 }  // namespace ckms
 }  // namespace yuuki
