@@ -19,28 +19,43 @@
 
 #include <catch.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <functional>
 #include <random>
 
 static const double kEpsilon = 0.01;
-static const int kMax = 100000;
+static const double kMax = 500;
 static const double kPercentile_high_biased[] = {0.5, 0.7, 0.9, 0.95, 0.99};
 static const double kPercentile_low_biased[] = {0.01, 0.05, 0.1, 0.3, 0.5};
 static const double kPercentile_uniform[] = {0.01, 0.05, 0.1, 0.3, 0.5, 0.7, 0.9, 0.95, 0.99};
 
 std::random_device rd;
 std::mt19937 gen(rd());
-std::uniform_int_distribution<int> dis(1, kMax);
+std::uniform_real_distribution<long double> dis(1, kMax);
 
 namespace yuuki {
 namespace ckms {
-#define YUUKI_TEST_IT(CKMS, REAL)                                             \
-  SECTION(#REAL) {                                                            \
-    CKMS<REAL> ckms(kEpsilon);                                                \
-    for (int i = 0; i < 50 * kMax; ++i) ckms.insert(dis(gen));                \
-    for (size_t i = 0; i != sizeof(kPercentile_##CKMS) / sizeof(double); ++i) \
-      REQUIRE(Approx(kPercentile_##CKMS[i] * kMax).epsilon(kEpsilon) ==       \
-              ckms.quantile(kPercentile_##CKMS[i]));                          \
+#define YUUKI_TEST_IT(CKMS, REAL)                                               \
+  SECTION(#REAL) {                                                              \
+    CKMS<REAL> ckms(kEpsilon);                                                  \
+    const int sz = std::min(500 * static_cast<int>(kMax), 1000000);             \
+    std::vector<REAL> vec;                                                      \
+    vec.reserve(sz);                                                            \
+    for (int i = 0; i < sz; ++i) {                                              \
+      auto r = dis(gen);                                                        \
+      ckms.insert(r);                                                           \
+      vec.push_back(r);                                                         \
+    }                                                                           \
+    std::sort(vec.begin(), vec.end(), std::less<REAL>());                       \
+    for (size_t i = 0; i != sizeof(kPercentile_##CKMS) / sizeof(double); ++i) { \
+      const double perc = kPercentile_##CKMS[i];                                \
+      const double quan = ckms.quantile(perc);                                  \
+      const size_t inf = std::floor((1 - kEpsilon) * perc * sz);                \
+      const size_t sup = std::ceil((1 + kEpsilon) * perc * sz);                 \
+      REQUIRE((vec[inf] <= quan && quan <= vec[sup]));                          \
+    }                                                                           \
   }
 
 TEST_CASE("high_biased") {
